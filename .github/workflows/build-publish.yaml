@@ -42,7 +42,16 @@ jobs:
 
       - name: Build and Test
         run: |
-          mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=matkoman-py_booking-accomodation -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONARCLOUD_TOKEN }}   
+          mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=matkoman-py_booking-accomodation -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONARCLOUD_TOKEN }}
+
+      - name: Verify File Existence
+        run: |
+          if [ -f "target/booking-accomodation-0.0.1-SNAPSHOT.jar" ]; then
+            echo "File exists"
+          else
+            echo "File does not exist"
+            exit 1
+          fi
 
   docker:
     name: Build and Publish Docker Image
