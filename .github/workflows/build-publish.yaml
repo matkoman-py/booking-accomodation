@@ -42,7 +42,6 @@ jobs:
 
       - name: Build and Test
         run: |
-          cd booking-accomodation
           mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=matkoman-py_booking-accomodation -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONARCLOUD_TOKEN }}   
 
   docker:
@@ -62,7 +61,6 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          cd booking-accomodation
           docker build -t ${{ env.DOCKERHUB_USERNAME }}/accommodation:latest .
 
 
