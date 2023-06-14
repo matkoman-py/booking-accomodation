@@ -59,6 +59,15 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
+      - name: Verify File Existence
+        run: |
+          if [ -f "target/booking-accomodation-0.0.1-SNAPSHOT.jar" ]; then
+            echo "File exists"
+          else
+            echo "File does not exist"
+            exit 1
+          fi
+
       - name: Build Docker Image
         run: |
           docker build -t ${{ env.DOCKERHUB_USERNAME }}/accommodation:latest .
