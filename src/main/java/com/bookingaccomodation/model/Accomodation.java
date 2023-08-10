@@ -33,7 +33,6 @@ public class Accomodation {
     private int maxGuests;
     @Enumerated(EnumType.STRING)
     private PriceType priceType;
-    private double defaultPrice;
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "accomodation")
     private List<CustomPricePerDay> customPricesPerDay;
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "accomodation")

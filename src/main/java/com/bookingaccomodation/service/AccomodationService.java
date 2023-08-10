@@ -2,22 +2,28 @@ package com.bookingaccomodation.service;
 
 import com.bookingaccomodation.exception.BadRequestException;
 import com.bookingaccomodation.model.Accomodation;
+import com.bookingaccomodation.model.CustomPricePerDay;
 import com.bookingaccomodation.model.dto.AccomodationDTO;
+import com.bookingaccomodation.model.dto.AccomodationWithPriceDTO;
+import com.bookingaccomodation.model.dto.CustomPriceDTO;
 import com.bookingaccomodation.repository.AccomodationRepository;
+import com.bookingaccomodation.repository.CustomPricePerDayRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AccomodationService {
 
     private final AccomodationRepository accomodationRepository;
+    private final BookingService bookingService;
+    private final CustomPricePerDayRepository customPricePerDayRepository;
     private final ModelMapper modelMapper;
 
     public AccomodationDTO create(AccomodationDTO accomodationDTO) {
@@ -34,11 +40,11 @@ public class AccomodationService {
     }
 
     public List<AccomodationDTO> getAll() {
-        List<AccomodationDTO> result = new ArrayList<>();
-        for(Accomodation accomodation : accomodationRepository.findAll()){
-            result.add(modelMapper.map(accomodation, AccomodationDTO.class));
-        }
-        return result;
+        return accomodationRepository
+                .findAll()
+                .stream()
+                .map(a -> modelMapper.map(a, AccomodationDTO.class))
+                .collect(Collectors.toList());
     }
 
     public AccomodationDTO getOne(String id) {
@@ -47,5 +53,97 @@ public class AccomodationService {
             throw new BadRequestException(String.format("ID: '%s' doesn't exist.", id));
         }
         return modelMapper.map(optionalAccomodation.get(), AccomodationDTO.class);
+    }
+
+    public AccomodationDTO createCustomPriceForAccomodation(String accomodationId, CustomPriceDTO customPriceDTO) {
+        Optional<Accomodation> optionalAccomodation = accomodationRepository.findById(accomodationId);
+
+        if (optionalAccomodation.isEmpty()) {
+            throw new BadRequestException(String.format("ID: '%s' doesn't exist.", accomodationId));
+        }
+
+        if(customPriceDTO.getStartDate().isAfter(customPriceDTO.getEndDate())){
+            throw new BadRequestException("Start date can't be after end date!");
+        }
+
+        Accomodation accomodation = optionalAccomodation.get();
+
+        if(bookingService.doesBookingExistInRangeForAccomodation(customPriceDTO.getStartDate(), customPriceDTO.getEndDate(), accomodationId)){
+            throw new BadRequestException("A booking already exists in this date range!");
+        }
+
+        LocalDate currentDate = customPriceDTO.getStartDate();
+
+        while (!currentDate.isAfter(customPriceDTO.getEndDate())) {
+            Optional<CustomPricePerDay> optionalCustomPricePerDay = customPricePerDayRepository
+                    .findByDateSlugAndAccomodationId(currentDate.toString(), accomodationId);
+
+            CustomPricePerDay customPricePerDay;
+            if (optionalCustomPricePerDay.isEmpty()) {
+                customPricePerDay = CustomPricePerDay
+                        .builder()
+                        .date(currentDate)
+                        .accomodation(accomodation)
+                        .dateSlug(currentDate.toString())
+                        .price(customPriceDTO.getPrice())
+                        .build();
+            } else {
+                customPricePerDay = optionalCustomPricePerDay.get();
+                customPricePerDay.setPrice(customPriceDTO.getPrice());
+            }
+            customPricePerDayRepository.save(customPricePerDay);
+
+            currentDate = currentDate.plusDays(1);
+        }
+
+        return modelMapper.map(accomodation, AccomodationDTO.class);
+    }
+
+    public AccomodationDTO removeCustomPriceForAccomodation(String accomodationId, CustomPriceDTO customPriceDTO) {
+        Optional<Accomodation> optionalAccomodation = accomodationRepository.findById(accomodationId);
+
+        if (optionalAccomodation.isEmpty()) {
+            throw new BadRequestException(String.format("ID: '%s' doesn't exist.", accomodationId));
+        }
+
+        if(customPriceDTO.getStartDate().isAfter(customPriceDTO.getEndDate())){
+            throw new BadRequestException("Start date can't be after end date!");
+        }
+
+        Accomodation accomodation = optionalAccomodation.get();
+
+        if(bookingService.doesBookingExistInRangeForAccomodation(customPriceDTO.getStartDate(), customPriceDTO.getEndDate(), accomodationId)){
+            throw new BadRequestException("A booking already exists in this date range!");
+        }
+
+        LocalDate currentDate = customPriceDTO.getStartDate();
+        while (!currentDate.isAfter(customPriceDTO.getEndDate())) {
+            Optional<CustomPricePerDay> optionalCustomPricePerDay = customPricePerDayRepository.findByDateSlugAndAccomodationId(currentDate.toString(), accomodationId);
+            if(optionalCustomPricePerDay.isPresent()){
+                // TODO: Not working
+                customPricePerDayRepository.delete(optionalCustomPricePerDay.get());
+            }
+            currentDate = currentDate.plusDays(1);
+        }
+
+        return modelMapper.map(accomodation, AccomodationDTO.class);
+    }
+
+    public List<AccomodationWithPriceDTO> search(String location, Integer numOfGuests, LocalDate startDate, LocalDate endDate) {
+        if(startDate.isAfter(endDate)){
+            throw new BadRequestException("Start date can't be after end date!");
+        }
+
+        // TODO: add custom price possibility into DTO, change the return type
+        return accomodationRepository
+                .findAll()
+                .stream()
+                .filter(a -> a.getLocation().toLowerCase().equals(location.toLowerCase()))
+                .filter(a -> a.getMaxGuests() >= numOfGuests)
+                .filter(a -> a.getMinGuests() <= numOfGuests)
+                .filter(a -> bookingService.isAccomodationAvailable(startDate, endDate, a.getId()))
+                .filter(a -> !bookingService.doesBookingExistInRangeForAccomodation(startDate, endDate, a.getId()))
+                .map(a-> new AccomodationWithPriceDTO(a, bookingService.calculatePriceOfAccomodationForDateRange(a, startDate, endDate, numOfGuests)))
+                .collect(Collectors.toList());
     }
 }
