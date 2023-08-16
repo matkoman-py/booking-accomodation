@@ -32,6 +32,14 @@ public class BookingService {
     private final CustomPricePerDayRepository customPricePerDayRepository;
     private final ModelMapper modelMapper;
 
+    public boolean doActiveBookingsExistForGuest(String id) {
+        return bookingRepository.countBookingsAfterTodayForGuest(LocalDate.now(), id) > 0;
+    }
+
+    public boolean doActiveBookingsExistForHost(String id) {
+        return bookingRepository.countBookingsAfterTodayForHost(LocalDate.now(), id) > 0;
+    }
+
     public boolean doesBookingExistInRangeForAccomodation(LocalDate startDate, LocalDate endDate, String accomodationId){
         Set<String> accomodationWithBookingsInRangeIds = bookingRepository
                 .findByStartDateBetween(startDate, endDate)

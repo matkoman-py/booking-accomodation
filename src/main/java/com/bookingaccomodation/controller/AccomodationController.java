@@ -29,6 +29,12 @@ public class AccomodationController {
         return ResponseEntity.ok(accomodationService.getAll());
     }
 
+    @DeleteMapping("/host/{id}")
+    public ResponseEntity<String> deleteAllForHost(@PathVariable String id) {
+        accomodationService.deleteForHost(id);
+        return ResponseEntity.ok("OK");
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<AccomodationWithPriceDTO>> search(@RequestParam String location,
                                                                  @RequestParam Integer numOfGuests,

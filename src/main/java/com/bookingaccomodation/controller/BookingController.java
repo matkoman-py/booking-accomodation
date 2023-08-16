@@ -16,6 +16,22 @@ public class BookingController {
 
     private final BookingService bookingService;
 
+
+    @GetMapping("/active-reservations-exist/guest/{id}")
+    public ResponseEntity<Boolean> doActiveBookingsExistForGuest(@PathVariable String id) {
+        return ResponseEntity.ok(bookingService.doActiveBookingsExistForGuest(id));
+    }
+
+    @GetMapping("/active-reservations-exist/host/{id}")
+    public ResponseEntity<Boolean> doActiveBookingsExistForHost(@PathVariable String id) {
+        return ResponseEntity.ok(bookingService.doActiveBookingsExistForHost(id));
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("HERE");
+    }
+
     @PostMapping
     public ResponseEntity<BookingRequestDTO> create(@RequestBody BookingRequestDTO bookingRequestDTO) {
         return ResponseEntity.ok(bookingService.create(bookingRequestDTO));
