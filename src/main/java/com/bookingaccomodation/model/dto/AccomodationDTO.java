@@ -25,6 +25,5 @@ public class AccomodationDTO {
     private int minGuests;
     private int maxGuests;
     private PriceType priceType;
-    private double defaultPrice;
     private String hostId;
 }
