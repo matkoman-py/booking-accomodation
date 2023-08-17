@@ -14,6 +14,7 @@ import com.bookingaccomodation.repository.BookingRequestRepository;
 import com.bookingaccomodation.repository.CustomPricePerDayRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -35,6 +36,16 @@ public class BookingService {
     public boolean doActiveBookingsExistForGuest(String id) {
         return bookingRepository.countBookingsAfterTodayForGuest(LocalDate.now(), id) > 0;
     }
+
+    public Boolean canGuestReviewAccomodation(String userId, String id) {
+        return bookingRepository.countPreviousAccomodationBookingsForGuest(LocalDate.now(), userId, id) > 0;
+    }
+
+    public Boolean canGuestReviewHost(String userId, String hostId) {
+        return bookingRepository.countPreviousHostBookingsForGuest(LocalDate.now(), userId, hostId) > 0;
+    }
+
+
 
     public boolean doActiveBookingsExistForHost(String id) {
         return bookingRepository.countBookingsAfterTodayForHost(LocalDate.now(), id) > 0;
