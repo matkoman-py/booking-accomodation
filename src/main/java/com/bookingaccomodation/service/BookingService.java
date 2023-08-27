@@ -1,17 +1,21 @@
 package com.bookingaccomodation.service;
 
 import com.bookingaccomodation.exception.BadRequestException;
+import com.bookingaccomodation.messaging.KafkaProducer;
 import com.bookingaccomodation.model.Accomodation;
 import com.bookingaccomodation.model.Booking;
 import com.bookingaccomodation.model.BookingRequest;
 import com.bookingaccomodation.model.CustomPricePerDay;
 import com.bookingaccomodation.model.dto.BookingRequestDTO;
+import com.bookingaccomodation.model.dto.NotificationDTO;
 import com.bookingaccomodation.model.enums.BookingRequestStatus;
+import com.bookingaccomodation.model.enums.NotificationType;
 import com.bookingaccomodation.model.enums.PriceType;
 import com.bookingaccomodation.repository.AccomodationRepository;
 import com.bookingaccomodation.repository.BookingRepository;
 import com.bookingaccomodation.repository.BookingRequestRepository;
 import com.bookingaccomodation.repository.CustomPricePerDayRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BookingService {
 
     private final AccomodationRepository accomodationRepository;
@@ -31,6 +36,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final CustomPricePerDayRepository customPricePerDayRepository;
     private final ModelMapper modelMapper;
+    private final KafkaProducer kafkaProducer;
 
     public boolean doesBookingExistInRangeForAccomodation(LocalDate startDate, LocalDate endDate, String accomodationId){
         Set<String> accomodationWithBookingsInRangeIds = bookingRepository
@@ -117,6 +123,13 @@ public class BookingService {
                 .build();
         bookingRequestRepository.save(bookingRequest);
 
+        kafkaProducer.sendMessage(NotificationDTO
+                                    .builder()
+                                    .message(String.format("You have a new booking request for: %s", accomodation.getName()))
+                                    .userId(accomodation.getHostId())
+                                    .notificationType(NotificationType.BOOKING_REQUEST)
+                                    .build());
+
         if(accomodation.isAutomaticApprove()){
             approveBookingRequest(bookingRequest.getId());
         }
@@ -169,6 +182,11 @@ public class BookingService {
         }
 
         BookingRequest bookingRequest = optionalBookingRequest.get();
+
+        if(!bookingRequest.getStatus().equals(BookingRequestStatus.PENDING)){
+            throw new BadRequestException("Booking request has already been handled!");
+        }
+
         bookingRequest
                 .setStatus(BookingRequestStatus.APPROVED);
         bookingRequestRepository.save(bookingRequest);
@@ -183,6 +201,13 @@ public class BookingService {
                 .build();
         bookingRepository.save(booking);
 
+        kafkaProducer.sendMessage(NotificationDTO
+                .builder()
+                .message(String.format("Your booking request for: %s has been accepted!", bookingRequest.getAccomodation().getName()))
+                .userId(bookingRequest.getUserId())
+                .notificationType(NotificationType.BOOKING_REQUEST_ANSWER)
+                .build());
+
         rejectAllBookingRequestsInRangeForAccomodation(booking.getStartDate(), booking.getEndDate(), booking.getAccomodation());
         return modelMapper.map(bookingRequest, BookingRequestDTO.class);
     }
@@ -195,6 +220,13 @@ public class BookingService {
                 if(br.getStatus().equals(BookingRequestStatus.PENDING)){
                     br.setStatus(BookingRequestStatus.REJECTED);
                     bookingRequestRepository.save(br);
+
+                    kafkaProducer.sendMessage(NotificationDTO
+                            .builder()
+                            .message(String.format("Your booking request for: %s has been rejected!", br.getAccomodation().getName()))
+                            .userId(br.getUserId())
+                            .notificationType(NotificationType.BOOKING_REQUEST_ANSWER)
+                            .build());
                 }
             }
         }
@@ -208,9 +240,20 @@ public class BookingService {
         }
 
         BookingRequest bookingRequest = optionalBookingRequest.get();
+        if(!bookingRequest.getStatus().equals(BookingRequestStatus.PENDING)){
+            throw new BadRequestException("Booking request has already been handled!");
+        }
+
         bookingRequest
                 .setStatus(BookingRequestStatus.REJECTED);
         bookingRequestRepository.save(bookingRequest);
+
+        kafkaProducer.sendMessage(NotificationDTO
+                .builder()
+                .message(String.format("Your booking request for: %s has been rejected!", bookingRequest.getAccomodation().getName()))
+                .userId(bookingRequest.getUserId())
+                .notificationType(NotificationType.BOOKING_REQUEST_ANSWER)
+                .build());
 
         return modelMapper.map(bookingRequest, BookingRequestDTO.class);
     }
@@ -248,6 +291,15 @@ public class BookingService {
         }
 
         BookingRequestDTO br = modelMapper.map(booking, BookingRequestDTO.class);
+
+        kafkaProducer.sendMessage(NotificationDTO
+                .builder()
+                .message(String.format("User: %s canceled the reservation for: %s", booking.getUserId(), booking.getAccomodation().getName()))
+                .userId(booking.getAccomodation().getHostId())
+                .notificationType(NotificationType.RESERVATION_CANCELED)
+                .build());
+
+        // TODO: doesn't work
         bookingRepository.delete(booking);
         return br;
     }
