@@ -39,5 +39,4 @@ public class Accomodation {
     private List<Booking> bookings;
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "accomodation")
     private List<BookingRequest> bookingRequests;
-    // TODO: Ocene
 }

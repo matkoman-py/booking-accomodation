@@ -138,7 +138,6 @@ public class AccomodationService {
             throw new BadRequestException("Start date can't be after end date!");
         }
 
-        // TODO: add custom price possibility into DTO, change the return type
         return accomodationRepository
                 .findAll()
                 .stream()
