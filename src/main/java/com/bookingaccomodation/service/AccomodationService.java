@@ -39,6 +39,10 @@ public class AccomodationService {
         return modelMapper.map(accomodationRepository.save(accommodation), AccomodationDTO.class);
     }
 
+    public void deleteForHost(String hostId) {
+        accomodationRepository.deleteAll(accomodationRepository.findByHostId(hostId));
+    }
+
     public List<AccomodationDTO> getAll() {
         return accomodationRepository
                 .findAll()

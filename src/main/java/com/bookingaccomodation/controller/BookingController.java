@@ -16,6 +16,32 @@ public class BookingController {
 
     private final BookingService bookingService;
 
+
+    @GetMapping("/active-reservations-exist/guest/{id}")
+    public ResponseEntity<Boolean> doActiveBookingsExistForGuest(@PathVariable String id) {
+        return ResponseEntity.ok(bookingService.doActiveBookingsExistForGuest(id));
+    }
+
+    @GetMapping("/previous-reservations-exist/accomodation/{userId}/{id}")
+    public ResponseEntity<Boolean> canGuestReviewAccomodation(@PathVariable String userId, @PathVariable String id) {
+        return ResponseEntity.ok(bookingService.canGuestReviewAccomodation(userId, id));
+    }
+
+    @GetMapping("/previous-reservations-exist/host/{userId}/{hostId}")
+    public ResponseEntity<Boolean> canGuestReviewHost(@PathVariable String userId, @PathVariable String hostId) {
+        return ResponseEntity.ok(bookingService.canGuestReviewHost(userId, hostId));
+    }
+
+    @GetMapping("/active-reservations-exist/host/{id}")
+    public ResponseEntity<Boolean> doActiveBookingsExistForHost(@PathVariable String id) {
+        return ResponseEntity.ok(bookingService.doActiveBookingsExistForHost(id));
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("HERE");
+    }
+
     @PostMapping
     public ResponseEntity<BookingRequestDTO> create(@RequestBody BookingRequestDTO bookingRequestDTO) {
         return ResponseEntity.ok(bookingService.create(bookingRequestDTO));
