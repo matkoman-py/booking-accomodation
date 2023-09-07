@@ -52,8 +52,8 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t ${{ env.DOCKERHUB_USERNAME }}/accommodation:latest .
+          docker build -t ${{ env.DOCKERHUB_USERNAME }}/accommodation:${{github.run_number}} .
 
 
       - name: Publish Docker Image
-        run: docker push ${{ env.DOCKERHUB_USERNAME }}/accommodation:latest
+        run: docker push ${{ env.DOCKERHUB_USERNAME }}/accommodation:${{github.run_number}}
