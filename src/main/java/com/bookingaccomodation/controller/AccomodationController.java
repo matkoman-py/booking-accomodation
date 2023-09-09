@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/accomodation")
+@RequestMapping("api/accommodation")
 @RequiredArgsConstructor
 public class AccomodationController {
 
