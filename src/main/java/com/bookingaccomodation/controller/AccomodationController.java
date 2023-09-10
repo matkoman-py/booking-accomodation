@@ -30,6 +30,11 @@ public class AccomodationController {
         return ResponseEntity.ok(accomodationService.getAll());
     }
 
+    @GetMapping("/host/{id}")
+    public ResponseEntity<List<AccomodationDTO>> getAllByHost(@PathVariable String id) {
+        return ResponseEntity.ok(accomodationService.getAllByHost(id));
+    }
+
     @DeleteMapping("/host/{id}")
     public ResponseEntity<String> deleteAllForHost(@PathVariable String id) {
         accomodationService.deleteForHost(id);
