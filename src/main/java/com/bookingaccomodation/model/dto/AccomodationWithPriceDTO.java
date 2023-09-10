@@ -30,7 +30,7 @@ public class AccomodationWithPriceDTO {
 
     public AccomodationWithPriceDTO(Accomodation a, double price) {
         this.id = a.getId();
-        this.name = a.getLocation();
+        this.name = a.getName();
         this.location = a.getLocation();
         this.automaticApprove = a.isAutomaticApprove();
         this.photographs = a.getPhotographs();
