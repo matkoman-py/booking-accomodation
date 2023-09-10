@@ -153,4 +153,11 @@ public class AccomodationService {
     public List<CustomPricePerDay> getAvailabilitiesForAccomodation(String accomodationId) {
         return customPricePerDayRepository.findByAccomodationId(accomodationId);
     }
+
+    public List<AccomodationDTO> getAllByHost(String id) {
+        return accomodationRepository.findByHostId(id)
+                .stream()
+                .map(a -> modelMapper.map(a, AccomodationDTO.class))
+                .collect(Collectors.toList());
+    }
 }
