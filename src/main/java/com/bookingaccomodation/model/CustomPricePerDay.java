@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -21,5 +23,6 @@ public class CustomPricePerDay {
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accomodation_id", nullable = false)
+    @JsonIgnore
     private Accomodation accomodation;
 }
