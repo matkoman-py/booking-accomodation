@@ -149,4 +149,8 @@ public class AccomodationService {
                 .map(a-> new AccomodationWithPriceDTO(a, bookingService.calculatePriceOfAccomodationForDateRange(a, startDate, endDate, numOfGuests)))
                 .collect(Collectors.toList());
     }
+
+    public List<CustomPricePerDay> getAvailabilitiesForAccomodation(String accomodationId) {
+        return customPricePerDayRepository.findByAccomodationId(accomodationId);
+    }
 }

@@ -1,6 +1,7 @@
 package com.bookingaccomodation.controller;
 
 
+import com.bookingaccomodation.model.CustomPricePerDay;
 import com.bookingaccomodation.model.dto.AccomodationDTO;
 import com.bookingaccomodation.model.dto.AccomodationWithPriceDTO;
 import com.bookingaccomodation.model.dto.CustomPriceDTO;
@@ -52,6 +53,11 @@ public class AccomodationController {
     public ResponseEntity<AccomodationDTO> createCustomPriceForAccomodation(@PathVariable String accomodationId,
                                                                             @RequestBody CustomPriceDTO customPriceDTO) {
         return ResponseEntity.ok(accomodationService.createCustomPriceForAccomodation(accomodationId, customPriceDTO));
+    }
+
+    @GetMapping("/availability/{accomodationId}")
+    public ResponseEntity<List<CustomPricePerDay>> getAvailabilitiesForAccomodation(@PathVariable String accomodationId) {
+        return ResponseEntity.ok(accomodationService.getAvailabilitiesForAccomodation(accomodationId));
     }
 
     @DeleteMapping("/remove-availability/{accomodationId}")
