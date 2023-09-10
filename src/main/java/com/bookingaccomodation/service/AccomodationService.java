@@ -124,8 +124,8 @@ public class AccomodationService {
         while (!currentDate.isAfter(customPriceDTO.getEndDate())) {
             Optional<CustomPricePerDay> optionalCustomPricePerDay = customPricePerDayRepository.findByDateSlugAndAccomodationId(currentDate.toString(), accomodationId);
             if(optionalCustomPricePerDay.isPresent()){
-                // TODO: Not working
                 customPricePerDayRepository.delete(optionalCustomPricePerDay.get());
+                customPricePerDayRepository.flush();
             }
             currentDate = currentDate.plusDays(1);
         }
