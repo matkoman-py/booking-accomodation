@@ -217,6 +217,7 @@ public class BookingService {
                 .startDate(bookingRequest.getStartDate())
                 .price(bookingRequest.getPrice())
                 .userId(bookingRequest.getUserId())
+                .numOfGuests(bookingRequest.getNumOfGuests())
                 .build();
         bookingRepository.save(booking);
 

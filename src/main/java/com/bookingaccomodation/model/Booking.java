@@ -21,6 +21,7 @@ public class Booking {
     private LocalDate endDate;
     private String userId;
     private double price;
+    private int numOfGuests;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accomodation_id", nullable = false)
     private Accomodation accomodation;
